@@ -1,9 +1,12 @@
 # Multi-Signature Wallet Smart Contract Security Assessment
 
 **Prepared by:** Volodymyr Stetsenko
+
 **Assessment Window:** 7 May 2025 – 14 May 2025
 **Revision:** 1.0 (Public)
+
 **Commit Reviewed:** `4cb1152`
+
 **Repository:** [audit-multisig-wallet-Volodymyr-Stetsenko](https://github.com/VolodymyrStetsenko/audit-multisig-wallet-Volodymyr-Stetsenko)
 
 📄 [Download Full PDF Report](reports/Volodymyr-Stetsenko-Multi-Signature-Wallet-Security-Assessment-Report.pdf)
