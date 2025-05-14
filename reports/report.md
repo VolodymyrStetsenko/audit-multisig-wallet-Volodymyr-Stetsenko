@@ -104,31 +104,41 @@ This audit covers the **entire codebase** at commit `4cb1152`:
 ### MS-01 Missing Replay Protection (Medium)
 
 **Issue:** Transactions lack a unique nonce → off-chain approvals can be replayed across instances.
+
 **Impact:** Replay of valid signatures on upgraded contracts.
+
 **Recommendation:** Add `uint256 nonce` to `Transaction` struct and include it in approval hashing.
 
 ### MS-02 Unsafe State Update Order (Medium)
 
 **Issue:** `executed` flag set *after* external call → reentrancy window.
+
 **Impact:** Double execution if malicious contract re-enters.
+
 **Recommendation:** Update `executed = true` **before** external call or use ReentrancyGuard.
 
 ### MS-03 ERC‑20 Return Value Ignored (Medium)
 
 **Issue:** Low-level call treats any non-revert as success → tokens like USDT returning `false` go unnoticed.
+
 **Impact:** Silent transfer failures, accounting discrepancies.
+
 **Recommendation:** Require `(success && (ret.length == 0 || abi.decode(ret, (bool))))` or use SafeERC20.
 
 ### MS-04 No Transaction Expiry (Low)
 
 **Issue:** Pending transactions never expire → stale proposals risk.
+
 **Impact:** Old/unreviewed proposals may execute unexpectedly.
+
 **Recommendation:** Add `createdAt` timestamp + `require(block.timestamp <= createdAt+TTL)` in execution.
 
 ### MS-05 Owner Lookup Gas Inefficiency (Low)
 
 **Issue:** Some operations iterate over owners array → O(N) gas cost.
+
 **Impact:** Marginal performance hit for large owner sets.
+
 **Recommendation:** Use `mapping(address => bool)` for O(1) checks; minimize loops.
 
 ---
