@@ -77,7 +77,7 @@ Deployment Ready:            YES (with minor improvements)
 
 ## 🧠 Architecture Diagram
 
-![Architecture Diagram](assets/architecture-diagram-volodymyr.svg)
+![Architecture Diagram](assets/diagram.png)
 
 ---
 
