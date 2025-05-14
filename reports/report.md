@@ -9,7 +9,7 @@
 
 **Repository:** [audit-multisig-wallet-Volodymyr-Stetsenko](https://github.com/VolodymyrStetsenko/audit-multisig-wallet-Volodymyr-Stetsenko)
 
-📄 [Download Full PDF Report](reports/Volodymyr-Stetsenko-Multi-Signature-Wallet-Security-Assessment-Report.pdf)
+📄 [Download Full PDF Report](Volodymyr-Stetsenko-Multi-Signature-Wallet-Security-Assessment-Report.pdf)
 
 ---
 
