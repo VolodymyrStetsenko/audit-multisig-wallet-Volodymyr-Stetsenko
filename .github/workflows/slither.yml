@@ -1,4 +1,4 @@
-name: Slither Security Analysis
+name: Slither Security Audit
 
 on:
   push:
@@ -11,12 +11,12 @@ on:
 jobs:
   slither-analysis:
     runs-on: ubuntu-latest
-    name: Run Slither
+    name: Run Slither and Save JSON Report
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Install dependencies
+      - name: Install Slither & solc
         run: |
           sudo apt-get update
           sudo apt-get install -y software-properties-common
@@ -25,5 +25,12 @@ jobs:
           sudo apt-get install -y solc
           pip3 install slither-analyzer
 
-      - name: Run Slither on contract
-        run: slither ./contracts/MultiSig.sol || true
+      - name: Run Slither and Save Report
+        run: |
+          slither ./contracts/MultiSig.sol --json slither-report.json || true
+
+      - name: Upload Slither JSON Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: slither-report
+          path: slither-report.json
