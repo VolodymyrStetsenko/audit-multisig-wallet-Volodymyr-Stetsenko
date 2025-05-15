@@ -1,6 +1,5 @@
 name: Slither Security Audit
 
-# коли запускати перевірку
 on:
   push:
     paths:
@@ -15,34 +14,30 @@ jobs:
     name: Run Slither and Save JSON Report
 
     steps:
-      # 1️⃣  Клонуємо репозиторій у runner
+      # 1️⃣ Клонуємо репозиторій
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      # 2️⃣  Ставимо solc + slither
+      # 2️⃣ Ставимо залежності + solc-select
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y software-properties-common
-          sudo add-apt-repository ppa:ethereum/ethereum -y
-          sudo apt-get update
-          sudo apt-get install -y solc
+          sudo apt-get install -y software-properties-common python3-pip curl
+          pip3 install solc-select
+          solc-select install 0.8.19
+          solc-select use 0.8.19
           pip3 install slither-analyzer
 
-      # 3️⃣  Запускаємо Slither і примусово зберігаємо JSON
+      # 3️⃣ Запускаємо Slither
       - name: Run Slither and save report
         run: |
           slither ./contracts/MultiSig.sol \
             --json slither-report.json \
-            --pretty-print || true
+            --pretty-print
 
-          # якщо Slither нічого не знайшов і файл не створився,
-          # робимо порожній JSON -- щоб артефакт завжди існував
-          if [ ! -f slither-report.json ]; then
-            echo '{}' > slither-report.json
-          fi
+          cat slither-report.json
 
-      # 4️⃣  Завантажуємо artefact (з’явиться в Actions → Artifacts)
+      # 4️⃣ Завантажуємо артефакт
       - name: Upload Slither JSON Report
         uses: actions/upload-artifact@v4
         with:
