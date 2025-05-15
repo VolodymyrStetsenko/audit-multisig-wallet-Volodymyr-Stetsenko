@@ -10,15 +10,15 @@ on:
 
 jobs:
   slither-analysis:
-    name: Run Slither and Save JSON + MD report
     runs-on: ubuntu-latest
+    name: Run Slither and Save JSON + MD report
 
     steps:
-      # 1) Клонуємо репозиторій
+      # 1. Клон репозиторію
       - name: Checkout repo
         uses: actions/checkout@v3
 
-      # 2) Встановлюємо solc та slither
+      # 2. Встановлюємо залежності
       - name: Install dependencies
         run: |
           sudo apt-get update
@@ -28,27 +28,30 @@ jobs:
           sudo apt-get install -y solc
           pip3 install slither-analyzer
 
-      # 3) Запускаємо Slither, ігноруємо код повернення, але лишаємо звіти
+      # 3. Запускаємо Slither
       - name: Run Slither
         id: slither
-        continue-on-error: true
+        continue-on-error: true    # щоб CI не зупинявся, навіть якщо знайдено issues
         run: |
           mkdir -p slither-output
 
-          # Сам аналіз; || true — щоб shell не зупинявся на коді 2
-          slither . \
+          # правильний порядок: спочатку опції, потім шляхи до контрактів
+          slither \
             --json slither-output/slither-report.json \
-            --markdown slither-output/slither-report.md || true
+            --markdown slither-output/slither-report.md \
+            contracts
 
-          # Дивимось, що лежить у папці
           echo "=== slither-output contents ==="
           ls -al slither-output
 
-      # 4) Завантажуємо всю папку зі звітами як артефакт
+      # 4. Завантажуємо обидва файли звіту як артефакт
       - name: Upload Slither reports
-        if: always()
+        if: always()              # навіть якщо помилки, все одно виконуємо
         uses: actions/upload-artifact@v4
         with:
           name: slither-report
-          path: slither-output/
+          path: slither-output/**  # ** — щоб підхопити всі файли у директорії
 
+      # 5. Завершуємо
+      - name: Complete job
+        run: echo "Done"
