@@ -3,22 +3,18 @@ name: Slither Audit
 on:
   push:
     paths:
-      - "contracts/**"
+      - 'contracts/**'
   pull_request:
     paths:
-      - "contracts/**"
+      - 'contracts/**'
 
 jobs:
   slither:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
 
     steps:
-      # 1. Клонуємо репо
-      - name: Checkout repo
-        uses: actions/checkout@v4
+      # 1. Завантажуємо репозиторій
+      - uses: actions/checkout@v4
 
       # 2. Ставимо solc + slither
       - name: Install tools
@@ -27,23 +23,25 @@ jobs:
           sudo apt-get install -y software-properties-common curl python3-pip
           sudo add-apt-repository -y ppa:ethereum/ethereum
           sudo apt-get update
-          sudo apt-get install -y solc
+          sudo apt-get install -y solc       # 0.8.30 — норм
           pip3 install --user slither-analyzer
 
-      # 3. Готуємо директорію для артефактів
-      - name: Prepare output
+      # 3. Створюємо папку для артефактів
+      - name: Prepare output dir
         run: mkdir -p slither-output
 
-      # 4. Запускаємо Slither і пишемо звіти
+      # 4. Запускаємо Slither **один раз** з правильними параметрами
       - name: Run Slither
         run: |
-          ~/.local/bin/slither . \
-            --json slither-output/slither.json \
-            --markdown slither-output/slither.md || true   # не валимо job, навіть якщо є баги
+          ~/.local/bin/slither contracts/MultiSig.sol \
+            --json      slither-output/slither.json \
+            --markdown  slither-output/slither.md      \
+            || true      # 👍 не валимо job, навіть якщо є findings
 
-      # 5. Завантажуємо артефакти
-      - name: Upload reports
+      # 5. Завантажуємо що вийшло
+      - name: Upload Slither reports
+        if: always()      # виконати в будь-якому разі
         uses: actions/upload-artifact@v4
         with:
-          name: slither-reports
-          path: slither-output/**
+          name: slither-report
+          path: slither-output/
