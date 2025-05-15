@@ -1,12 +1,6 @@
 name: Slither Security Analysis
 
-on:
-  push:
-    paths:
-      - 'contracts/**'
-  pull_request:
-    paths:
-      - 'contracts/**'
+on: [push, pull_request]
 
 jobs:
   slither-analysis:
