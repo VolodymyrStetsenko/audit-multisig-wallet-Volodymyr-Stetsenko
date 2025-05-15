@@ -1,3 +1,16 @@
+
+Етап **Upload Slither reports** запускається, але в каталозі `slither-output/` немає жодного файла, тому завантажувати нічого.  
+Подивися трохи вище у блоці **Run Slither** — замість нормального виводу аналізу Slither друкує свою *довідку*-help. Це означає, що команда виконується з неправильними аргументами, тому:
+
+* Slither **не формує** `slither-report.json` та `slither-report.md`;  
+* GitHub Action нічого не знаходить → артефакти не створюються.
+
+---
+
+## Швидка правка `slither.yml`
+
+```yml
+# .github/workflows/slither.yml
 name: Slither Security Audit
 
 on:
@@ -14,33 +27,34 @@ jobs:
     name: Run Slither and Save JSON + MD report
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
+    # 1 Клон репозиторію
+    - name: Checkout repo
+      uses: actions/checkout@v4
 
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y software-properties-common
-          sudo add-apt-repository ppa:ethereum/ethereum -y
-          sudo apt-get update
-          sudo apt-get install -y solc
-          pip3 install slither-analyzer
+    # 2 Встановлюємо solc та slither
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y software-properties-common
+        sudo add-apt-repository ppa:ethereum/ethereum -y
+        sudo apt-get update
+        sudo apt-get install -y solc
+        pip3 install slither-analyzer
 
-      - name: Run Slither
-        run: |
-          mkdir -p slither-output
-          
-          # Запускаємо перевірку та явно вказуємо контракт
-          slither contracts/MultiSig.sol \
-            --json slither-output/slither-report.json \
-            --markdown slither-output/slither-report.md || true
-          
-          echo "=== slither-output contents ==="
-          ls -l slither-output
+    # 3 Запускаємо Slither → кладе файли у slither-output/
+    - name: Run Slither
+      run: |
+        mkdir -p slither-output
+        slither ./contracts/MultiSig.sol \
+          --json      slither-output/slither-report.json \
+          --markdown  slither-output/slither-report.md || true
+        # покажемо, що всередині каталогу
+        ls -al slither-output
 
-      - name: Upload Slither reports
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: slither-report
-          path: slither-output/
+    # 4 Завантажуємо усе, що лежить у slither-output/
+    - name: Upload Slither reports
+      uses: actions/upload-artifact@v4
+      with:
+        name: slither-report
+        path: slither-output/**
+        if-no-files-found: warn   # лише попередження, не збивати весь job
