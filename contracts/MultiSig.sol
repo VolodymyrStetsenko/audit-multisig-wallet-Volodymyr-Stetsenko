@@ -126,5 +126,3 @@ contract MultiSig {
     receive() external payable {}
 }
 
-// Trigger slither manually
-
