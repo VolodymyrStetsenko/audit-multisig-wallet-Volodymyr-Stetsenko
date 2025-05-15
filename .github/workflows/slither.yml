@@ -1,42 +1,49 @@
-name: Slither Security Audit
+name: Slither Audit
 
 on:
   push:
-    paths:
-      - 'contracts/**'
+    branches:
+      - main
   pull_request:
-    paths:
-      - 'contracts/**'
 
 jobs:
-  slither-analysis:
+  slither:
+    name: Run Slither Static Analysis
     runs-on: ubuntu-latest
-    name: Run Slither and Save JSON + Markdown Reports
 
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Install dependencies
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+
+      - name: Install Foundry
+        uses: foundry-rs/setup-foundry@v1
+        with:
+          version: nightly
+
+      - name: Install Slither
         run: |
-          sudo apt-get update
-          sudo apt-get install -y software-properties-common
           sudo add-apt-repository ppa:ethereum/ethereum -y
           sudo apt-get update
-          sudo apt-get install -y solc
-          pip3 install slither-analyzer
+          sudo apt-get install -y slither-analyzer solc
 
       - name: Create output directory
         run: mkdir -p slither-output
 
-      - name: Run Slither and generate reports
+      - name: Run Slither and save report
         run: |
           slither ./contracts/MultiSig.sol \
             --json slither-output/slither-report.json \
-            --markdown slither-output/slither-report.md || true
+            --markdown slither-output/slither-report.md \
+            --exclude-dependencies \
+            --solc-remaps '@openzeppelin=node_modules/@openzeppelin'
 
-      - name: Upload Slither reports
-        uses: actions/upload-artifact@v4
+      - name: Upload Slither report artifact
+        uses: actions/upload-artifact@v3
         with:
-          name: slither-report
+          name: slither-reports
           path: slither-output/
