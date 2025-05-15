@@ -11,35 +11,34 @@ jobs:
   slither:
     runs-on: ubuntu-latest
     steps:
-      # 1. Клон репозиторій
-      - name: Checkout
-        uses: actions/checkout@v4       # ← остання стабільна major-версія
 
-      # 2. Встановити Slither + solc (через Foundry)
-      - name: Install tools
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y python3-pip
-          pip3 install slither-analyzer
-          curl -L https://foundry.paradigm.xyz | bash
-          source ~/.bashrc
-          foundryup
+    # 1 Checkout
+    - uses: actions/checkout@v4
 
-      # 3. Підготувати директорію для звітів
-      - name: Prepare output folder
-        run: mkdir -p slither-output
+    # 2 Встановлюємо curl + python3-pip + Foundry + Slither
+    - name: Install tools
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y curl python3-pip
+        pip3 install slither-analyzer
+        curl -L https://foundry.paradigm.xyz | bash
+        ~/.foundry/bin/foundryup
 
-      # 4. Запустити Slither
-      - name: Run Slither
-        continue-on-error: true          # не валити workflow, якщо знайдено проблеми
-        run: |
-          slither ./contracts/MultiSig.sol \
-            --json slither-output/report.json \
-            --markdown slither-output/report.md || true
+    # 3 Створюємо каталог для звітів
+    - name: Prepare output
+      run: mkdir -p slither-output
 
-      # 5. Завантажити артефакти
-      - name: Upload reports
-        uses: actions/upload-artifact@v4 # ← вказуємо v4, вона доступна
-        with:
-          name: slither-report
-          path: slither-output/**
+    # 4 Запускаємо Slither
+    - name: Run Slither
+      continue-on-error: true
+      run: |
+        slither ./contracts/MultiSig.sol \
+          --json slither-output/report.json \
+          --markdown slither-output/report.md || true
+
+    # 5 Артефакти
+    - name: Upload reports
+      uses: actions/upload-artifact@v4
+      with:
+        name: slither-report
+        path: slither-output/**
