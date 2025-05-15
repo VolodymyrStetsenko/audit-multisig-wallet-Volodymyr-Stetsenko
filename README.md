@@ -77,7 +77,7 @@ Deployment Ready:            YES (with minor improvements)
 
 ## 🧠 Architecture Diagram
 
-![Architecture Diagram](assets/diagram.png)
+![Architecture Diagram](https://raw.githubusercontent.com/VolodymyrStetsenko/audit-multisig-wallet-Volodymyr-Stetsenko/main/assets/diagram.png)
 
 ---
 
@@ -86,6 +86,7 @@ Deployment Ready:            YES (with minor improvements)
 **Volodymyr Stetsenko** is a Web3 security analyst and smart contract auditor specializing in DeFi, DAO tools, and on-chain architecture validation.
 
 > 🔗 GitHub: [VolodymyrStetsenko](https://github.com/VolodymyrStetsenko)
+
 > 📬 Contact: security \[at] stetsenko.eth (soon)
 
 ---
