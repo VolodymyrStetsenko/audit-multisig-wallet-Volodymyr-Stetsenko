@@ -31,11 +31,11 @@ jobs:
         run: mkdir -p slither-output
 
       # 4. Запускаємо Slither **один раз** з правильними параметрами
-      - name: Run Slither
+            - name: Run Slither
         run: |
           ~/.local/bin/slither contracts/MultiSig.sol \
-            --json      slither-output/slither.json \
-            --markdown  slither-output/slither.md      \
+            --json     slither-output/slither.json \
+            --markdown slither-output/slither.md
             || true      # 👍 не валимо job, навіть якщо є findings
 
       # 5. Завантажуємо що вийшло
