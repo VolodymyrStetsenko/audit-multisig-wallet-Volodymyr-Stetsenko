@@ -1,15 +1,3 @@
-
-Етап **Upload Slither reports** запускається, але в каталозі `slither-output/` немає жодного файла, тому завантажувати нічого.  
-Подивися трохи вище у блоці **Run Slither** — замість нормального виводу аналізу Slither друкує свою *довідку*-help. Це означає, що команда виконується з неправильними аргументами, тому:
-
-* Slither **не формує** `slither-report.json` та `slither-report.md`;  
-* GitHub Action нічого не знаходить → артефакти не створюються.
-
----
-
-## Швидка правка `slither.yml`
-
-```yml
 # .github/workflows/slither.yml
 name: Slither Security Audit
 
@@ -27,11 +15,9 @@ jobs:
     name: Run Slither and Save JSON + MD report
 
     steps:
-    # 1 Клон репозиторію
     - name: Checkout repo
       uses: actions/checkout@v4
 
-    # 2 Встановлюємо solc та slither
     - name: Install dependencies
       run: |
         sudo apt-get update
@@ -41,20 +27,18 @@ jobs:
         sudo apt-get install -y solc
         pip3 install slither-analyzer
 
-    # 3 Запускаємо Slither → кладе файли у slither-output/
     - name: Run Slither
       run: |
         mkdir -p slither-output
         slither ./contracts/MultiSig.sol \
           --json      slither-output/slither-report.json \
           --markdown  slither-output/slither-report.md || true
-        # покажемо, що всередині каталогу
         ls -al slither-output
 
-    # 4 Завантажуємо усе, що лежить у slither-output/
     - name: Upload Slither reports
       uses: actions/upload-artifact@v4
       with:
         name: slither-report
         path: slither-output/**
-        if-no-files-found: warn   # лише попередження, не збивати весь job
+        if-no-files-found: warn       # показати попередження, але не падати
+
