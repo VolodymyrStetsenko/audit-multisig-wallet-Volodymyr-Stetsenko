@@ -28,8 +28,8 @@ This repository contains a complete **security audit** of a custom **Multi-Signa
 contracts/     →  Original audited smart contract
 reports/       →  Security reports (Markdown + PDF)
 diagrams/      →  [Optional] Architecture or threat models
-tests/         →  [Optional] Unit tests (Coming soon)
 assets/        →  Diagrams, branding visuals
+tests/         →  [Optional] Unit tests (Coming soon)
 README.md      →  Project overview (you are here)
 ```
 
@@ -96,7 +96,9 @@ For audit collaborations, partnership inquiries, or DAO tooling assessments — 
 
 ---
 
+## 📜 License
 
-## ✍️ License
+MIT — open for learning, research and portfolio purposes.
 
-MIT — open for learning, research and portfolio presentation.
+---
+
