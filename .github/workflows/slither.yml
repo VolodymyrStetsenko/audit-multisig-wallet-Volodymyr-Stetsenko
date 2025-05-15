@@ -1,47 +1,51 @@
-name: Slither Security Audit
+name: Slither Security Audit      # ←- назва Workflow (залишаємо)
 
-# коли запускати перевірку
+# === Коли запускається перевірка ===============================
 on:
   push:
     paths:
-      - 'contracts/**'
+      - 'contracts/**'            # ­— слідкуємо лише за кодом
   pull_request:
     paths:
       - 'contracts/**'
 
+# === Один-єдиний Job ============================================
 jobs:
   slither-analysis:
     runs-on: ubuntu-latest
-    name: Run Slither and Save JSON Report
+    name: Run Slither and Save JSON + MD report
 
     steps:
-      # 1️⃣  Клонуємо репозиторій у runner
-      - name: Checkout repo
-        uses: actions/checkout@v3
+    # 1️⃣  Клонуємо репозиторій у runner-машину
+    - name: Checkout repo
+      uses: actions/checkout@v3
 
-      # 2️⃣  Ставимо solc + slither
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y software-properties-common
-          sudo add-apt-repository ppa:ethereum/ethereum -y
-          sudo apt-get update
-          sudo apt-get install -y solc
-          pip3 install slither-analyzer
+    # 2️⃣  Ставимо solc + slither
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y software-properties-common
+        sudo add-apt-repository ppa:ethereum/ethereum -y
+        sudo apt-get update
+        sudo apt-get install -y solc
+        pip3 install slither-analyzer
 
-  # ─── 3️⃣  Запускаємо Slither ──────────────────────────────────────────────
-      - name: Run Slither
-        id: slither
-        continue-on-error: true          #   ✓  не зупиняємо workflow, навіть якщо Slither знайшов помилки
-        run: |
-          slither ./contracts/MultiSig.sol \
-              --json slither-report.json
+    # 3️⃣  Запускаємо Slither  →  JSON + Markdown
+    - name: Run Slither
+      id: slither
+      continue-on-error: true          # ✔ Workflow не впаде, якщо Slither знайшов баги
+      run: |
+        slither ./contracts/MultiSig.sol \
+          --json          slither-report.json \
+          --markdown-root . \
+          --markdown-file slither-report.md
 
-# ─── 4️⃣  Завантажуємо artefact, навіть якщо Slither повернув non-zero ───
-      - name: Upload Slither JSON Report
-        if: always()                     #   ✓  виконати у будь-якому разі
-        uses: actions/upload-artifact@v4
-        with:
-          name: slither-report
-          path: slither-report.json
-
+    # 4️⃣  Завантажуємо обидва файли як artefact
+    - name: Upload Slither reports
+      if: always()                     # виконується у будь-якому разі
+      uses: actions/upload-artifact@v4
+      with:
+        name: slither-artifacts
+        path: |
+          slither-report.json
+          slither-report.md
