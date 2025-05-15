@@ -14,11 +14,9 @@ jobs:
     name: Run Slither and Save JSON + MD report
 
     steps:
-      # 1. Клон репозиторію
       - name: Checkout repo
         uses: actions/checkout@v3
 
-      # 2. Встановлюємо залежності
       - name: Install dependencies
         run: |
           sudo apt-get update
@@ -28,30 +26,21 @@ jobs:
           sudo apt-get install -y solc
           pip3 install slither-analyzer
 
-      # 3. Запускаємо Slither
       - name: Run Slither
-        id: slither
-        continue-on-error: true    # щоб CI не зупинявся, навіть якщо знайдено issues
         run: |
           mkdir -p slither-output
-
-          # правильний порядок: спочатку опції, потім шляхи до контрактів
-          slither \
+          
+          # Запускаємо перевірку та явно вказуємо контракт
+          slither contracts/MultiSig.sol \
             --json slither-output/slither-report.json \
-            --markdown slither-output/slither-report.md \
-            contracts
-
+            --markdown slither-output/slither-report.md || true
+          
           echo "=== slither-output contents ==="
-          ls -al slither-output
+          ls -l slither-output
 
-      # 4. Завантажуємо обидва файли звіту як артефакт
       - name: Upload Slither reports
-        if: always()              # навіть якщо помилки, все одно виконуємо
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: slither-report
-          path: slither-output/**  # ** — щоб підхопити всі файли у директорії
-
-      # 5. Завершуємо
-      - name: Complete job
-        run: echo "Done"
+          path: slither-output/
