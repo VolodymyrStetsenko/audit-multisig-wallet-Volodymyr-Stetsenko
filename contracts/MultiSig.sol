@@ -125,3 +125,6 @@ contract MultiSig {
     // Receive Ether
     receive() external payable {}
 }
+
+// Trigger slither manually
+
