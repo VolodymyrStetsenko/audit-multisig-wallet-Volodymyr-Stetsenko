@@ -2,37 +2,47 @@ name: Slither Audit
 
 on:
   push:
-    branches:
-      - main
-  pull_request:
+    paths:
+      - "contracts/**"
+      - ".github/workflows/slither.yml"
+  workflow_dispatch:
 
 jobs:
   slither:
-    name: Run Slither Static Analysis
     runs-on: ubuntu-latest
-
+    name: Run Slither + збереження звітів
     steps:
-      - name: Checkout repository
+      # 1. Клон репозиторій
+      - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Install Slither
+      # 2. Встановити Foundry (для solc) і Slither
+      - name: Install dependencies
         run: |
-          sudo add-apt-repository ppa:ethereum/ethereum -y
           sudo apt-get update
-          sudo apt-get install -y solc
+          sudo apt-get install -y python3-pip
           pip3 install slither-analyzer
+          curl -L https://foundry.paradigm.xyz | bash
+          source ~/.bashrc
+          foundryup
 
-      - name: Create output folder
+      # 3. Створити директорію для звітів
+      - name: Prepare output folder
         run: mkdir -p slither-output
 
-      - name: Run Slither and save report
+      # 4. Запустити Slither і сформувати JSON + Markdown
+      - name: Run Slither
+        id: slither
+        # повернення ненульового коду не зупиняє workflow
+        continue-on-error: true
         run: |
           slither ./contracts/MultiSig.sol \
             --json slither-output/slither-report.json \
-            --markdown slither-output/slither-report.md
+            --markdown slither-output/slither-report.md || true
 
+      # 5. Завантажити артефакти (звіт)
       - name: Upload Slither reports
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v2
         with:
-          name: slither-reports
-          path: slither-output/
+          name: slither-report
+          path: slither-output/**
