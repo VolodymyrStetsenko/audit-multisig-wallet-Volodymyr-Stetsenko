@@ -1,5 +1,6 @@
 name: Slither Security Audit
 
+# Запускаємо на кожному пуші в contracts/ і в PR
 on:
   push:
     paths:
@@ -10,13 +11,15 @@ on:
 
 jobs:
   slither-analysis:
-    runs-on: ubuntu-latest
     name: Run Slither and Save JSON + MD report
+    runs-on: ubuntu-latest
 
     steps:
+      # 1. Клонуємо репо
       - name: Checkout repo
         uses: actions/checkout@v3
 
+      # 2. Встановлюємо solc та slither
       - name: Install dependencies
         run: |
           sudo apt-get update
@@ -26,15 +29,23 @@ jobs:
           sudo apt-get install -y solc
           pip3 install slither-analyzer
 
+      # 3. Генеруємо звіт
       - name: Run Slither
         id: slither
-        continue-on-error: true
+        continue-on-error: true    # не падає workflow, навіть якщо знайдені проблеми
         run: |
+          # створюємо папку, куди збережемо звіти
           mkdir -p slither-output
-          slither ./contracts/MultiSig.sol \
+
+          # аналізуємо ВСІ контракти в поточній папці
+          slither . \
             --json slither-output/slither-report.json \
             --markdown slither-output/slither-report.md
 
+          # для впевненості виведемо вміст папки
+          ls -al slither-output
+
+      # 4. Прикріплюємо папку з результатами як артефакт
       - name: Upload Slither reports
         if: always()
         uses: actions/upload-artifact@v4
