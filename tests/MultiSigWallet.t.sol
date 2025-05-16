@@ -9,12 +9,13 @@ contract MultiSigWalletTest is Test {
     address alice = address(0x1);
     address bob = address(0x2);
     address carol = address(0x3);
+    address[] owners;
 
     function setUp() public {
-        address ;
-        owners[0] = alice;
-        owners[1] = bob;
-        owners[2] = carol;
+        owners.push(alice);
+        owners.push(bob);
+        owners.push(carol);
+
         wallet = new MultiSigWallet(owners, 2);
 
         vm.deal(address(wallet), 10 ether);
@@ -76,3 +77,4 @@ contract MultiSigWalletTest is Test {
         wallet.confirmTransaction(0);
     }
 }
+
