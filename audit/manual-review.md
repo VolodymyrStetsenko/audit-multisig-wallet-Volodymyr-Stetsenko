@@ -104,3 +104,34 @@ for (uint i = 0; i < _owners.length; i++) {
     }
 }
 
+---
+
+## 🔍 7. Function Review: confirmTransaction (uint256 transactionId)
+
+### ✅ Summary
+
+The function implements standard multisig confirmation logic, ensuring:
+- Ownership check
+- No double confirmations
+- Quorum-based auto-execution
+
+However, some best practices and protections are missing.
+
+---
+
+### ⚠️ Issues & Recommendations
+
+| ID | Severity | Issue | Recommendation |
+|----|----------|-------|----------------|
+| CT-01 | 🔴 High | Internal call to `executeTransaction()` may trigger reentrancy | Add `nonReentrant` or externalize execution |
+| CT-02 | 🟠 Medium | No gas stipend or fallback logic during execution | Use safe execution pattern with fallback plan |
+| CT-03 | 🟡 Low | No way to revoke a confirmation | Consider adding `revokeConfirmation()` |
+| CT-04 | 🟡 Low | Failed `call` is not logged separately | Emit `ExecutionFailed()` event on failure |
+
+---
+
+### ✅ Suggested Fix (conceptual):
+
+Instead of calling `executeTransaction()` inline, consider emitting an event:
+```solidity
+event ExecutionTriggered(uint256 transactionId);
