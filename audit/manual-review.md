@@ -70,3 +70,37 @@ The architecture is concise and avoids external dependencies (like OpenZeppelin)
 
 ---
 
+## 🔍 6. Function Review: constructor(address[] memory _owners, uint256 _required)
+
+### ✅ Summary
+
+The constructor correctly validates the minimal conditions for owner and threshold setup.
+
+However, it does **not prevent duplicate addresses**, or zero-address owners. This can lead to:
+- Centralized control (if one address repeated multiple times)
+- Silent failures or unexpected behavior due to `address(0)`
+
+---
+
+### ⚠️ Issues & Recommendations
+
+| ID | Severity | Issue |
+|----|----------|-------|
+| C-01 | 🔴 High | Duplicate owner addresses are allowed |
+| C-02 | 🟠 Medium | Zero-address (`address(0)`) owners are allowed |
+| C-03 | 🟡 Low | No cap on number of owners (gas issues with thousands of owners) |
+
+---
+
+### ✅ Suggested Fix (example):
+
+```solidity
+for (uint i = 0; i < _owners.length; i++) {
+    address owner = _owners[i];
+    require(owner != address(0), "Invalid owner: zero address");
+
+    for (uint j = 0; j < i; j++) {
+        require(_owners[j] != owner, "Duplicate owner");
+    }
+}
+
