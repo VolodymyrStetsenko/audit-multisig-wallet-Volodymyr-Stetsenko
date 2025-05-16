@@ -112,41 +112,36 @@ for (uint i = 0; i < _owners.length; i++) {
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+##
+---
 
 
 ---
 
+## 🔍 7. Function Review: confirmTransaction(uint256 transactionId)
 
+### ✅ Summary
+
+This function allows an owner to confirm a pending transaction by setting their approval in the confirmation mapping. If the number of confirmations reaches the required threshold, it **immediately executes** the transaction.
+
+---
+
+### ⚠️ Issues & Observations
+
+| ID | Severity | Issue |
+|----|----------|-------|
+| CT-01 | 🟠 Medium | Immediate execution combines confirmation and execution logic. This may introduce gas reentrancy vectors or complicate testing. |
+| CT-02 | 🟠 Medium | No `nonReentrant` protection around `executeTransaction`. |
+| CT-03 | 🟡 Low | Owners can confirm transactions even after execution (though harmless due to `executed` flag). |
+| CT-04 | 🟡 Low | No `require(!txn.executed)` check here — even though `executeTransaction` checks it, adding it improves clarity. |
+
+---
+
+### ✅ Suggestions
+
+- Split confirmation and execution into two distinct operations for better auditability and modularity.
+- Add a `nonReentrant` modifier if the `executeTransaction` includes `.call{value:}` to external addresses.
+- Add a check in `confirmTransaction` to reject confirmation of already executed transactions.
+
+```solidity
+require(!transactions[transactionId].executed, "Already executed");
