@@ -6,8 +6,13 @@ interface IERC20 {
     function balanceOf(address account) external view returns (uint256);
 }
 
+<<<<<<< HEAD
 contract MultiSigWallet {
     // State Variables
+=======
+    contract MultiSigWallet {
+// State Variables
+>>>>>>> 1761b23 (Local changes before sync)
     address[] public owners; // Array of wallet owners
     uint256 public required; // Number of required confirmations
 
@@ -18,6 +23,10 @@ contract MultiSigWallet {
         bytes data;          // Additional data (calldata)
         bool executed;       // Execution status
     }
+    
+    function getTransactionCount() public view returns (uint256) {
+    return transactions.length;
+}
 
     // Array of Transactions
     Transaction[] public transactions;
