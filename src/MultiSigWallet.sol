@@ -6,7 +6,7 @@ interface IERC20 {
     function balanceOf(address account) external view returns (uint256);
 }
 
-contract MultiSig {
+contract MultiSigWallet {
     // State Variables
     address[] public owners; // Array of wallet owners
     uint256 public required; // Number of required confirmations
