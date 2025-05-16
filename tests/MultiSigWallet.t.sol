@@ -6,35 +6,42 @@ import "../src/MultiSigWallet.sol";
 
 contract MultiSigWalletTest is Test {
     MultiSigWallet wallet;
-    address[] public owners;
     address alice = address(0x1);
     address bob = address(0x2);
     address carol = address(0x3);
 
     function setUp() public {
-        owners.push(alice);
-        owners.push(bob);
-        owners.push(carol);
+        address ;
+        owners[0] = alice;
+        owners[1] = bob;
+        owners[2] = carol;
         wallet = new MultiSigWallet(owners, 2);
+
         vm.deal(address(wallet), 10 ether);
     }
 
     function testAddTransactionAndConfirm() public {
         vm.prank(alice);
-        wallet.executeERC20Transfer(address(0), address(0x99), 100);
+        wallet.executeERC20Transfer(address(0xABC), address(0x999), 100);
 
         assertEq(wallet.getTransactionCount(), 1);
-        (address dest, , , bool executed) = wallet.transactions(0);
-        assertEq(dest, address(0));
+
+        (
+            address dest,
+            uint value,
+            bytes memory data,
+            bool executed
+        ) = wallet.transactions(0);
+
+        assertEq(dest, address(0xABC));
+        assertEq(value, 0);
         assertFalse(executed);
     }
 
     function testExecuteWithEnoughConfirmations() public {
-        // Add ERC20 transfer txn
         vm.prank(alice);
         wallet.executeERC20Transfer(address(0xABC), address(0x999), 500);
 
-        // Confirm from second owner
         vm.prank(bob);
         wallet.confirmTransaction(0);
 
@@ -54,6 +61,18 @@ contract MultiSigWalletTest is Test {
     function testRevertsIfNotOwner() public {
         vm.prank(address(0xdead));
         vm.expectRevert("Only owners can confirm");
+        wallet.confirmTransaction(0);
+    }
+
+    function testRevertsIfExecuted() public {
+        vm.prank(alice);
+        wallet.executeERC20Transfer(address(0xABC), address(0x999), 500);
+
+        vm.prank(bob);
+        wallet.confirmTransaction(0);
+
+        vm.prank(carol);
+        vm.expectRevert("Transaction already executed");
         wallet.confirmTransaction(0);
     }
 }
