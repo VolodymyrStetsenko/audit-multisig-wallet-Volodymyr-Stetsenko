@@ -115,34 +115,28 @@ for (uint i = 0; i < _owners.length; i++) {
 ---
 
 
-## 🔍 7. Function Review: confirmTransaction (uint256 transactionId)
+🔍 Function Review: confirmTransaction(uint256 transactionId)
+✅ Summary
+The function handles confirmation of transactions by wallet owners and attempts automatic execution once the threshold is met.
 
-### ✅ Summary
+It performs the following:
 
-The function implements standard multisig confirmation logic, ensuring:
-- Ownership check
-- No double confirmations
-- Quorum-based auto-execution
+Verifies ownership of the caller
 
-However, some best practices and protections are missing.
+Ensures no double-confirming
 
+Updates the confirmation mapping
 
----
+Triggers execution if the transaction reaches quorum
 
+⚠️ Issues & Recommendations
+ID	Severity	Issue	Recommendation
+CT-01	🔴 High	Inline call to executeTransaction() can lead to reentrancy if the destination is a malicious contract	Use the [Checks-Effects-Interactions] pattern or move execution to a separate external function
+CT-02	🟠 Medium	No gas stipend or fallback logic. If transaction fails, it's not retried or flagged	Track execution result and emit ExecutionFailed event
+CT-03	🟡 Low	No option to revoke confirmation (UX/DAO limitation)	Add a revokeConfirmation() function
+CT-04	🟡 Low	No logging for failed execution	Emit ExecutionFailed(uint256 txId) on error
 
-### ⚠️ Issues & Recommendations
-
-| ID | Severity | Issue | Recommendation |
-|----|----------|-------|----------------|
-| CT-01 | 🔴 High | Internal call to `executeTransaction()` may trigger reentrancy | Add `nonReentrant` or externalize execution |
-| CT-02 | 🟠 Medium | No gas stipend or fallback logic during execution | Use safe execution pattern with fallback plan |
-| CT-03 | 🟡 Low | No way to revoke a confirmation | Consider adding `revokeConfirmation()` |
-| CT-04 | 🟡 Low | Failed `call` is not logged separately | Emit `ExecutionFailed()` event on failure |
-
----
-
-### ✅ Suggested Fix (conceptual):
-
-Instead of calling `executeTransaction()` inline, consider emitting an event:
-```solidity
+🛠️ Suggested Fixes
+Separate execution phase to avoid reentrancy:
 event ExecutionTriggered(uint256 transactionId);
+
