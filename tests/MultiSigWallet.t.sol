@@ -1,49 +1,59 @@
-import os
-
-# Create the test directory and test file if they do not exist
-test_dir = "/mnt/data/test"
-test_file_path = os.path.join(test_dir, "MultiSig.t.sol")
-
-os.makedirs(test_dir, exist_ok=True)
-
-# Create a basic test template for MultiSig
-test_file_content = """
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
-import "../src/MultiSig.sol";
+import "../src/MultiSigWallet.sol";
 
-contract MultiSigTest is Test {
-    MultiSig wallet;
-    address[] owners;
-    uint256 requiredConfirmations;
+contract MultiSigWalletTest is Test {
+    MultiSigWallet wallet;
+    address[] public owners;
+    address alice = address(0x1);
+    address bob = address(0x2);
+    address carol = address(0x3);
 
     function setUp() public {
-        owners = new address[](3);
-        owners[0] = address(0x1);
-        owners[1] = address(0x2);
-        owners[2] = address(0x3);
-        requiredConfirmations = 2;
-        wallet = new MultiSig(owners, requiredConfirmations);
+        owners.push(alice);
+        owners.push(bob);
+        owners.push(carol);
+        wallet = new MultiSigWallet(owners, 2);
+        vm.deal(address(wallet), 10 ether);
     }
 
-    function testOwnersSetCorrectly() public {
-        for (uint256 i = 0; i < owners.length; i++) {
-            bool isOwner = wallet.isOwner(owners[i]);
-            assertTrue(isOwner, "Owner not set correctly");
-        }
+    function testAddTransactionAndConfirm() public {
+        vm.prank(alice);
+        wallet.executeERC20Transfer(address(0), address(0x99), 100);
+
+        assertEq(wallet.getTransactionCount(), 1);
+        (address dest, , , bool executed) = wallet.transactions(0);
+        assertEq(dest, address(0));
+        assertFalse(executed);
     }
 
-    function testRequiredConfirmations() public {
-        uint actual = wallet.required();
-        assertEq(actual, requiredConfirmations, "Required confirmations mismatch");
+    function testExecuteWithEnoughConfirmations() public {
+        // Add ERC20 transfer txn
+        vm.prank(alice);
+        wallet.executeERC20Transfer(address(0xABC), address(0x999), 500);
+
+        // Confirm from second owner
+        vm.prank(bob);
+        wallet.confirmTransaction(0);
+
+        (, , , bool executed) = wallet.transactions(0);
+        assertTrue(executed);
+    }
+
+    function testRevertsIfDoubleConfirm() public {
+        vm.prank(alice);
+        wallet.executeERC20Transfer(address(0xABC), address(0x999), 500);
+
+        vm.prank(alice);
+        vm.expectRevert("Already confirmed");
+        wallet.confirmTransaction(0);
+    }
+
+    function testRevertsIfNotOwner() public {
+        vm.prank(address(0xdead));
+        vm.expectRevert("Only owners can confirm");
+        wallet.confirmTransaction(0);
     }
 }
-"""
-
-# Write the content to file
-with open(test_file_path, "w") as f:
-    f.write(test_file_content)
-
-test_file_path
