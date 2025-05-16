@@ -115,28 +115,64 @@ for (uint i = 0; i < _owners.length; i++) {
 ---
 
 
-🔍 Function Review: confirmTransaction(uint256 transactionId)
-✅ Summary
-The function handles confirmation of transactions by wallet owners and attempts automatic execution once the threshold is met.
 
-It performs the following:
+## 🔎 7. Function Review: `confirmTransaction(uint256 transactionId)`
 
-Verifies ownership of the caller
+### ✅ Summary
 
-Ensures no double-confirming
+The `**confirmTransaction**` function implements standard multisig logic with quorum-based execution.
 
-Updates the confirmation mapping
+It ensures:
 
-Triggers execution if the transaction reaches quorum
+- ✅ **Only owners can confirm** transactions  
+- ✅ **No double confirmations** (per-owner check)  
+- ✅ **Auto-execution** if threshold is reached  
 
-⚠️ Issues & Recommendations
-ID	Severity	Issue	Recommendation
-CT-01	🔴 High	Inline call to executeTransaction() can lead to reentrancy if the destination is a malicious contract	Use the [Checks-Effects-Interactions] pattern or move execution to a separate external function
-CT-02	🟠 Medium	No gas stipend or fallback logic. If transaction fails, it's not retried or flagged	Track execution result and emit ExecutionFailed event
-CT-03	🟡 Low	No option to revoke confirmation (UX/DAO limitation)	Add a revokeConfirmation() function
-CT-04	🟡 Low	No logging for failed execution	Emit ExecutionFailed(uint256 txId) on error
+However, there are critical security **risks** and **missing patterns**.
 
-🛠️ Suggested Fixes
-Separate execution phase to avoid reentrancy:
-event ExecutionTriggered(uint256 transactionId);
+---
 
+### ⚠️ Issues & Recommendations
+
+| ID     | Severity | Issue                                                                 | Recommendation                                                      |
+|--------|----------|------------------------------------------------------------------------|----------------------------------------------------------------------|
+| **CT-01** | 🔴 High   | Internal call to `executeTransaction()` could allow **reentrancy**         | Move execution out of confirmation function; or use `nonReentrant`  |
+| **CT-02** | 🟠 Medium | No **gas protection** — external calls may run out of gas / block TX flow | Use gas stipend limits or async pattern                              |
+| **CT-03** | 🟡 Low    | **Confirmations are permanent** — cannot revoke vote                | Add `revokeConfirmation()` for governance flexibility                |
+| **CT-04** | 🟡 Low    | Failed `call` is not **explicitly logged**                          | Emit an `ExecutionFailed()` event if call fails                      |
+
+---
+
+### 🧠 Security Context
+
+- Reentrancy can be triggered if the destination is **malicious** (e.g., a contract with fallback logic).
+- Lack of modular execution separation violates **Checks-Effects-Interactions**.
+- Not emitting failure-specific events makes **debugging harder**.
+
+---
+
+### 🛠️ Suggested Fix (Conceptual Refactor)
+
+Instead of immediate execution:
+```solidity
+if (isConfirmed(transactionId)) {
+    executeTransaction(transactionId);
+}
+
+
+Use this safer async model:
+
+if (isConfirmed(transactionId)) {
+    emit ExecutionTriggered(transactionId);
+}
+
+Then allow external users/frontends to call:
+
+function executeTransaction(uint txId) external onlyOwner { ... }
+
+And in executeTransaction, use this logging:
+
+(bool success, ) = txn.destination.call{ value: txn.value }(txn.data);
+if (!success) {
+    emit ExecutionFailed(transactionId);
+}
