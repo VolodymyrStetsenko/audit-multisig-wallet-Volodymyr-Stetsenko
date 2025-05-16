@@ -1,8 +1,11 @@
 # 🔬 Slither Static Analysis Report
 
 **Analyzed Contract**: `src/MultiSigWallet.sol`
+
 **Tool Used**: [Slither](https://github.com/crytic/slither) — v0.11.3
+
 **Run Date**: May 2025
+
 **Command Executed**:
 
 ```bash
@@ -35,7 +38,9 @@ This document presents a structured report based on Slither’s static analysis 
 ### SL-01A – Reentrancy Risk: External Call Before State Mutation
 
 **Location**: `executeTransaction(uint256)` @ Line 83
+
 **Impact**: Medium
+
 **Summary**: The contract performs an external call before updating critical state variables (`txn.executed`). This pattern opens the door to reentrancy vectors.
 
 **Recommendation**:
@@ -62,7 +67,9 @@ Reference: [Slither Reentrancy](https://github.com/crytic/slither/wiki/Detector-
 ### SL-01B – Reentrancy Risk: Event Emitted After External Call
 
 **Location**: `executeTransaction(uint256)` @ Line 87
+
 **Impact**: Medium
+
 **Summary**: Events emitted after external calls can complicate off-chain indexing and may expose unintended execution order vulnerabilities.
 
 **Recommendation**: Always emit events after final internal state changes and before any external interaction **or** explicitly after safety confirmations.
@@ -74,7 +81,9 @@ Reference: [Slither Event After Call](https://github.com/crytic/slither/wiki/Det
 ### SL-02 – Usage of Vulnerable Solidity Version ^0.8.4
 
 **Location**: Line 2
+
 **Impact**: Low
+
 **Summary**: Solidity version ^0.8.4 is associated with critical bugs such as:
 
 * `FullInlinerNonExpressionSplitArgumentEvaluationOrder`
@@ -94,7 +103,9 @@ Reference: [Solidity Bugs](https://soliditylang.org/docs/v0.8.20/bugs.html)
 ### SL-03 – Use of Low-Level `.call()` Without Return Decoding
 
 **Location**: Line 83
+
 **Impact**: Low
+
 **Summary**: Usage of `.call{value:}(data)` bypasses ABI type checking and provides no fail-safe fallback.
 
 **Recommendation**:
@@ -111,7 +122,9 @@ Reference: [Slither Low-Level Call](https://github.com/crytic/slither/wiki/Detec
 ### SL-04 – Loop Gas Optimization (Uncached `.length` Access)
 
 **Location**: Lines 107, 117
+
 **Impact**: Low
+
 **Summary**: The contract repeatedly calls `.length` within loop conditions, leading to redundant storage reads.
 
 **Recommendation**:
@@ -130,7 +143,9 @@ Reference: [Cache Array Length](https://github.com/crytic/slither/wiki/Detector-
 ### SL-05 – State Mutability Optimization: `required` Variable
 
 **Location**: Line 12
+
 **Impact**: Informational
+
 **Summary**: The `required` variable is only set in the constructor and never modified. Marking it `immutable` saves gas.
 
 **Recommendation**:
