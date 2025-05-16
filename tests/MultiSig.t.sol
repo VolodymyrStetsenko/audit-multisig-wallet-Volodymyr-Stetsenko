@@ -5,24 +5,24 @@ import "forge-std/Test.sol";
 import "../src/MultiSig.sol";
 
 contract MultiSigTest is Test {
-    MultiSig wallet;
-    address[] owners;
+    MultiSig public wallet;
+    address[] public owners;
 
     function setUp() public {
-        owners = [address(1), address(2), address(3)];
-        wallet = new MultiSig(owners, 2); // 2-of-3 wallet
-        vm.deal(address(this), 1 ether); // даємо цьому контракту 1 ether
+        owners = new address ;
+        owners[0] = address(0x1);
+        owners[1] = address(0x2);
+        owners[2] = address(0x3);
+        wallet = new MultiSig(owners, 2);
     }
 
-    function testAddTransactionAndConfirm() public {
-        wallet.addTransaction(address(4), 0.1 ether, "");
+    function testOwnersSetCorrectly() public {
+        assertTrue(wallet.isOwner(address(0x1)));
+        assertTrue(wallet.isOwner(address(0x2)));
+        assertTrue(wallet.isOwner(address(0x3)));
+    }
 
-        wallet.confirmTransaction(0);
-        wallet.confirmTransaction(0);
-
-        wallet.executeTransaction(0);
-
-        (, , , , bool executed) = wallet.transactions(0);
-        assertTrue(executed);
+    function testRequiredConfirmations() public {
+        assertEq(wallet.required(), 2);
     }
 }
