@@ -180,4 +180,37 @@ function executeTransaction(uint256 transactionId) internal nonReentrant {
 
     emit TransactionExecuted(transactionId);
 }
+```
 
+---
+
+
+---
+
+## 🔍 9. Function Review: executeERC20Transfer(address tokenAddress, address recipient, uint256 amount)
+
+### ✅ Summary
+
+This function allows an owner to create and auto-confirm an ERC20 token transfer by encoding a `transfer(address,uint256)` call. It's executed through the standard multisig flow.
+
+---
+
+### ⚠️ Issues & Observations
+
+| ID      | Severity | Issue |
+|---------|----------|-------|
+| ERC-01  | 🟠 Medium | Immediate confirmation by the proposer — bypasses multisig for 1/1 wallets. |
+| ERC-02  | 🟠 Medium | No validation if `tokenAddress` is a smart contract or ERC20-compliant. |
+| ERC-03  | 🟡 Low    | Use of hardcoded ABI signature — may break with non-standard ERC20 tokens. |
+
+---
+
+### ✅ Suggestions
+
+- Split submission and confirmation logic.
+- Use OpenZeppelin’s `IERC20` interface for safer interaction.
+- Validate the token address via `address.code.length`.
+
+```solidity
+require(tokenAddress.code.length > 0, "Invalid token contract");
+```
