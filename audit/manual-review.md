@@ -68,7 +68,10 @@ The architecture is concise and avoids external dependencies (like OpenZeppelin)
 - ⏳ Forge-based test cases
 - ⏳ PDF Report (final stage)
 
+
 ---
+
+
 
 ## 🔍 6. Function Review: constructor(address[] memory _owners, uint256 _required)
 
@@ -80,7 +83,9 @@ However, it does **not prevent duplicate addresses**, or zero-address owners. Th
 - Centralized control (if one address repeated multiple times)
 - Silent failures or unexpected behavior due to `address(0)`
 
+
 ---
+
 
 ### ⚠️ Issues & Recommendations
 
@@ -90,7 +95,9 @@ However, it does **not prevent duplicate addresses**, or zero-address owners. Th
 | C-02 | 🟠 Medium | Zero-address (`address(0)`) owners are allowed |
 | C-03 | 🟡 Low | No cap on number of owners (gas issues with thousands of owners) |
 
+
 ---
+
 
 ### ✅ Suggested Fix (example):
 
@@ -103,6 +110,7 @@ for (uint i = 0; i < _owners.length; i++) {
         require(_owners[j] != owner, "Duplicate owner");
     }
 }
+
 
 ---
 
