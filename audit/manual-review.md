@@ -98,6 +98,19 @@ However, it does **not prevent duplicate addresses**, or zero-address owners. Th
 
 ---
 
+
+### ✅ Suggested Fix (example):
+
+```solidity
+for (uint i = 0; i < _owners.length; i++) {
+    address owner = _owners[i];
+    require(owner != address(0), "Invalid owner: zero address");
+
+    for (uint j = 0; j < i; j++) {
+        require(_owners[j] != owner, "Duplicate owner");
+    }
+}
+```
 ---
 
 ## 🔍 7. Function Review: confirmTransaction(uint256 transactionId)
@@ -127,3 +140,44 @@ This function allows an owner to confirm a pending transaction by setting their 
 
 ```solidity
 require(!transactions[transactionId].executed, "Already executed");
+```
+--------
+
+
+---
+
+## 🔍 8. Function Review: executeTransaction(uint256 transactionId)
+
+### ✅ Summary
+
+This function executes a confirmed transaction using a low-level `.call`. It transfers ETH or executes arbitrary function calls on external contracts.
+
+---
+
+### ⚠️ Issues & Observations
+
+| ID | Severity | Issue |
+|----|----------|-------|
+| EX-01 | 🔴 High | `txn.executed = true` is set only after the external `.call`. This opens the contract to reentrancy risks. |
+| EX-02 | 🟠 Medium | No `nonReentrant` modifier used. |
+| EX-03 | 🟡 Low | Return value of `.call` is not used to verify correct behavior (e.g., decoding return data). |
+| EX-04 | 🟡 Low | No gas limit is set for external calls, which could lead to high gas usage or denial-of-service attacks. |
+
+---
+
+### ✅ Suggested Fix
+
+```solidity
+function executeTransaction(uint256 transactionId) internal nonReentrant {
+    Transaction storage txn = transactions[transactionId];
+    require(!txn.executed, "Transaction already executed");
+    require(isConfirmed(transactionId), "Transaction not confirmed");
+
+    txn.executed = true;
+
+    (bool success, ) = txn.destination.call{ value: txn.value }(txn.data);
+    require(success, "Transaction execution failed");
+
+    emit TransactionExecuted(transactionId);
+}
+
