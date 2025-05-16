@@ -98,22 +98,6 @@ However, it does **not prevent duplicate addresses**, or zero-address owners. Th
 
 ---
 
-
-### ✅ Suggested Fix (example):
-
-```solidity
-for (uint i = 0; i < _owners.length; i++) {
-    address owner = _owners[i];
-    require(owner != address(0), "Invalid owner: zero address");
-
-    for (uint j = 0; j < i; j++) {
-        require(_owners[j] != owner, "Duplicate owner");
-    }
-}
-
----
-
-
 ---
 
 ## 🔍 7. Function Review: confirmTransaction(uint256 transactionId)
