@@ -74,5 +74,18 @@ contract MultiSigWalletTest is Test {
         vm.prank(carol);
         vm.expectRevert("Transaction already executed");
         wallet.confirmTransaction(0);
+        }
+
+    function testERC20MockTransfer() public {
+        MockERC20 token = new MockERC20();
+
+        vm.prank(alice);
+        wallet.executeERC20Transfer(address(token), address(0x999), 123);
+
+        vm.prank(bob);
+        wallet.confirmTransaction(0);
+
+        uint256 balance = token.balanceOf(address(0x999));
+        assertEq(balance, 123);
     }
 }
