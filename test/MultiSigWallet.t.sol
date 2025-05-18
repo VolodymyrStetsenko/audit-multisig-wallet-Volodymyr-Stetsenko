@@ -3,6 +3,7 @@ pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
 import "../src/MultiSigWallet.sol";
+import "./mocks/MockERC20.sol";
 
 contract MultiSigWalletTest is Test {
     MultiSigWallet wallet;
@@ -74,7 +75,7 @@ contract MultiSigWalletTest is Test {
         vm.prank(carol);
         vm.expectRevert("Transaction already executed");
         wallet.confirmTransaction(0);
-        }
+    }
 
     function testERC20MockTransfer() public {
         MockERC20 token = new MockERC20();
