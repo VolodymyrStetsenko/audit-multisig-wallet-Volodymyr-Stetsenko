@@ -89,4 +89,11 @@ contract MultiSigWalletTest is Test {
         uint256 balance = token.balanceOf(address(0x999));
         assertEq(balance, 123);
     }
+
+    function testReceiveEther() public {
+        vm.deal(address(this), 1 ether);
+        (bool success, ) = address(wallet).call{value: 1 ether}("");
+        assertTrue(success);
+        assertEq(address(wallet).balance, 11 ether);
+    }
 }
