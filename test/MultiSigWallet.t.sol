@@ -4,11 +4,12 @@ pragma solidity ^0.8.20;
 import "forge-std/Test.sol";
 import "../src/MultiSigWallet.sol";
 import "./mocks/MockERC20.sol";
+import "./mocks/MaliciousReceiver.sol";
 
 contract MultiSigWalletTest is Test {
     MultiSigWallet wallet;
     address alice = address(0x1);
-    address bob = address(0x2);
+    address bob   = address(0x2);
     address carol = address(0x3);
     address[] owners;
 
@@ -21,19 +22,17 @@ contract MultiSigWalletTest is Test {
         vm.deal(address(wallet), 10 ether);
     }
 
+    /* --------------------------------------------------------------------- */
+    /*                       ─── initial positive tests ───               */
+    /* --------------------------------------------------------------------- */
+
     function testAddTransactionAndConfirm() public {
         vm.prank(alice);
         wallet.executeERC20Transfer(address(0xABC), address(0x999), 100);
 
         assertEq(wallet.getTransactionCount(), 1);
 
-        (
-            address dest,
-            uint value,
-            bytes memory data,
-            bool executed
-        ) = wallet.transactions(0);
-
+        (address dest, uint value,, bool executed) = wallet.transactions(0);
         assertEq(dest, address(0xABC));
         assertEq(value, 0);
         assertFalse(executed);
@@ -49,6 +48,10 @@ contract MultiSigWalletTest is Test {
         (, , , bool executed) = wallet.transactions(0);
         assertTrue(executed);
     }
+
+    /* --------------------------------------------------------------------- */
+    /*                         ─── нnegative branches ───                       */
+    /* --------------------------------------------------------------------- */
 
     function testRevertsIfDoubleConfirm() public {
         vm.prank(alice);
@@ -77,6 +80,10 @@ contract MultiSigWalletTest is Test {
         wallet.confirmTransaction(0);
     }
 
+    /* --------------------------------------------------------------------- */
+    /*                     ─── integration with Mock ERC20 ───                   */
+    /* --------------------------------------------------------------------- */
+
     function testERC20MockTransfer() public {
         MockERC20 token = new MockERC20();
 
@@ -86,14 +93,45 @@ contract MultiSigWalletTest is Test {
         vm.prank(bob);
         wallet.confirmTransaction(0);
 
-        uint256 balance = token.balanceOf(address(0x999));
-        assertEq(balance, 123);
+        assertEq(token.balanceOf(address(0x999)), 123);
     }
+
+    /* --------------------------------------------------------------------- */
+    /*                          ─── receive() ───                       */
+    /* --------------------------------------------------------------------- */
 
     function testReceiveEther() public {
         vm.deal(address(this), 1 ether);
-        (bool success, ) = address(wallet).call{value: 1 ether}("");
-        assertTrue(success);
+
+        (bool ok, ) = address(wallet).call{value: 1 ether}("");
+        assertTrue(ok);
         assertEq(address(wallet).balance, 11 ether);
+    }
+
+    /* --------------------------------------------------------------------- */
+    /*                     ─── proof-of-concept reentrancy ───               */
+    /* --------------------------------------------------------------------- */
+
+    function testReentrancy() public {
+        address attackerAddr = address(new MaliciousReceiver());
+        address;
+        evilOwners[0] = alice;
+        evilOwners[1] = attackerAddr; // ! зловмисник
+        evilOwners[2] = bob;
+
+        MultiSigWallet evilWallet = new MultiSigWallet(evilOwners, 2);
+        MaliciousReceiver(payable(attackerAddr)).initWallet(address(evilWallet));
+
+        vm.deal(address(evilWallet), 5 ether);
+
+        vm.prank(alice);
+        evilWallet.executeERC20Transfer(attackerAddr, address(0), 0); // data байдуже
+
+        vm.prank(attackerAddr);
+        evilWallet.confirmTransaction(0);
+
+        vm.prank(alice);
+        vm.expectRevert(); // у поточній реалізації reentrancy проходить; тест покаже, чи вразливо
+        evilWallet.confirmTransaction(0);
     }
 }
