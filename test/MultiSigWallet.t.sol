@@ -113,25 +113,33 @@ contract MultiSigWalletTest is Test {
     /* --------------------------------------------------------------------- */
 
     function testReentrancy() public {
-        address attackerAddr = address(new MaliciousReceiver());
+        // 1) Деплоїмо контракт-атакер і записуємо адресу
+        MaliciousReceiver attacker = new MaliciousReceiver();
+        address attackerAddr = address(attacker);
+
+        // 2) Формуємо масив власників, де attacker також owner
         address;
         evilOwners[0] = alice;
-        evilOwners[1] = attackerAddr; // ! зловмисник
+        evilOwners[1] = attackerAddr;
         evilOwners[2] = bob;
 
+        // 3) Деплоїмо мультисиг і прив’язуємо до атакера
         MultiSigWallet evilWallet = new MultiSigWallet(evilOwners, 2);
-        MaliciousReceiver(payable(attackerAddr)).initWallet(address(evilWallet));
+        attacker.initWallet(address(evilWallet));
 
-        vm.deal(address(evilWallet), 5 ether);
+        vm.deal(address(evilWallet), 5 ether); // баланс є
 
+        // 4) Alice створює транзакцію на адресу attacker
         vm.prank(alice);
-        evilWallet.executeERC20Transfer(attackerAddr, address(0), 0); // data байдуже
+        evilWallet.executeERC20Transfer(attackerAddr, address(0), 0);
 
+        // 5) Bob (attacker) підтверджує – 1-ше підтвердження
         vm.prank(attackerAddr);
         evilWallet.confirmTransaction(0);
 
+        // 6) Alice дає друге підтвердження – під час виконання attacker спробує повторно
         vm.prank(alice);
-        vm.expectRevert(); // у поточній реалізації reentrancy проходить; тест покаже, чи вразливо
+        vm.expectRevert();           // очікуємо, що повторна confirm зірветься
         evilWallet.confirmTransaction(0);
     }
 }
